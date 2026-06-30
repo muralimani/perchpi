@@ -12,6 +12,8 @@
 #  rpi-misc-skel,
 #  rpi-user-credentials,
 #  systemd-net-min,
+#  rpi-connect-lite,
+#  wireless-regulatory,
 #  openssh-server,
 #  systemd-timesyncd
 # METAEND
@@ -19,18 +21,39 @@
 mmdebstrap:
   packages:
     - nano
-    - python3-numpy
     - git
+    - python3-numpy
     - python3-flask
     - python3-pip
+    - network-manager
+    - dnsmasq
+    - rpi-usb-gadget
   customize-hooks:
     - echo "$IGconf_device_hostname" > $1/etc/hostname
     - |-
-      # Disable WiFi and startup
-    - echo "dtoverlay=disable-wifi" >> $1/boot/firmware/config.txt
-    - rm -f $1/etc/xdg/autostart/piwiz.desktop
-    - |-
+      # NetworkManager connection: shared ethernet on eth0 (NAT + DHCP server at 192.168.10.1/24)
+      # Equivalent to: nmcli connection add type ethernet ifname eth0 con-name 'direct-link' \
+      #   ipv4.method shared ipv4.addresses 192.168.10.1/24
+      mkdir -p $1/etc/NetworkManager/system-connections
+      cat > $1/etc/NetworkManager/system-connections/direct-link.nmconnection <<-EOF
+      [connection]
+      id=direct-link
+      type=ethernet
+      interface-name=eth0
+      autoconnect=true
 
+      [ethernet]
+
+      [ipv4]
+      method=shared
+      address1=192.168.10.1/24
+
+      [ipv6]
+      method=ignore
+      EOF
+      chmod 600 $1/etc/NetworkManager/system-connections/direct-link.nmconnection
+    - $BDEBSTRAP_HOOKS/enable-units "$1" NetworkManager
+    - |-
       # Autologin on virtual console (tty1)
       mkdir -p $1/etc/systemd/system/getty@tty1.service.d
       cat > $1/etc/systemd/system/getty@tty1.service.d/autologin.conf <<-EOF
@@ -48,14 +71,16 @@ mmdebstrap:
       EOF
       $BDEBSTRAP_HOOKS/enable-units "$1" serial-getty@ttyGS0
     - |-
-      # Install and enable rpi-usb-gadget service
-      chroot "$1" apt-get install -y rpi-usb-gadget
+      # Enable USB Gadget ON
       $BDEBSTRAP_HOOKS/enable-units "$1" rpi-usb-gadget on
     - |-
-
       # Clone app repository into pi home directory on the build host, then copy in
       TMPDIR=$(mktemp -d)
-      git clone https://github.com/mmumshad/simple-webapp-flask.git "$TMPDIR/app"
+      git clone https://github.com/muralimani/test-http-sever.git "$TMPDIR/app"
       cp -r "$TMPDIR/app" "$1/home/$IGconf_device_user1/app"
       chroot "$1" chown -R "$IGconf_device_user1:$IGconf_device_user1" "/home/$IGconf_device_user1/app"
       rm -rf "$TMPDIR"
+    - |-
+      # Clone Perch Onnx file to a specific folder
+      mkdir -p $1/usr/local/share/perch
+      wget -O $1/usr/local/share/perch/perch_v2.onnx https://huggingface.co/justinchuby/Perch-onnx/resolve/main/perch_v2.onnx
