@@ -2,9 +2,9 @@ include:
   file: trixie-minbase-ab.yaml
 device:
   layer: rpi4
-  hostname: perchpi
+  hostname: perchpi2
   user1: pi
-  user1pass:  pi
+  user1pass:  PerchPi@123
 
 image:
   layer: image-rpios
