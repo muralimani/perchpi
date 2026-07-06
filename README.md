@@ -1,4 +1,4 @@
-# rpi-custom-image
+# PerchPi Custom image
 
 A custom Raspberry Pi Image for quickly deploying the Bird Classification model - Perch [https://github.com/google-research/perch] on edge device like Pi to classify birds through Bioaccountic monitoring. Some of the constraints in running the m/c learning model applies for this deployment model.
 
