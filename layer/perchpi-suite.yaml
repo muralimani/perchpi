@@ -25,9 +25,12 @@ mmdebstrap:
     - python3-numpy
     - python3-flask
     - python3-pip
+    - python3-venv
     - network-manager
     - dnsmasq
     - rpi-usb-gadget
+    - libsndfile1
+    - ffmpeg
   customize-hooks:
     - echo "$IGconf_device_hostname" > $1/etc/hostname
     - |-
@@ -82,5 +85,34 @@ mmdebstrap:
       rm -rf "$TMPDIR"
     - |-
       # Clone Perch Onnx file to a specific folder
+      # Create a venv for the pi user and install perch-hoplite into it
+      mkdir -p $1/home/pi/perchpi/venv
+      chroot "$1" python3 -m venv "/home/$IGconf_device_user1/perchpi/venv"
+      chroot "$1" chown -R "$IGconf_device_user1:$IGconf_device_user1" "/home/$IGconf_device_user1/perchpi/venv"
+      chroot "$1" "/home/$IGconf_device_user1/perchpi/venv/bin/pip3" install perch-hoplite[onnx]
       mkdir -p $1/usr/local/share/perch
       wget -O $1/usr/local/share/perch/perch_v2.onnx https://huggingface.co/justinchuby/Perch-onnx/resolve/main/perch_v2.onnx
+
+    - |-
+      # Setup the Perchpi as service and start at boot
+      cat > $1/etc/systemd/system/perchpi.service <<-EOF
+      [Unit]
+      Description=PerchPi
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=pi
+      WorkingDirectory=/home/pi/perchpi
+      ExecStart=/home/pi/perchpi/venv/bin/python3 /home/pi/app/test.py
+      Restart=on-failure
+      RestartSec=5
+
+      # Optional: environment variables
+      # Environment=API_KEY=xxx
+      # EnvironmentFile=/opt/myapp/.env
+
+      [Install]
+      WantedBy=multi-user.target
+      EOF
+      $BDEBSTRAP_HOOKS/enable-units "$1" perchpi
