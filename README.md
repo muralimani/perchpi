@@ -22,20 +22,24 @@ sudo ./install_deps.sh
 
 Step 2: Git clone the custom image for PerchPi
 ```
-git clone https://github.com/raspberrypi/rpi-image-gen.git
-cd rpi-image-gen
-sudo ./install_deps.sh
+git clone https://github.com/perchpi.git
 ```
-Leverage rpi-image-gen to build a custom image
-Define the config & layer for customising the features relevant for the
-Config - Define the image name
-Layer - Install all relevant software / packages
+
+Step3: Build the image
 
 ```
-./rpi-image-gen build -S examples/perchpi -c examples/perchpi/config/perchpi.yaml
+cd rpi-image-gen/
+sudo ./rpi-image-gen build -S /home/pi/perchpi -c perchpi.yaml 
+```
+
+Step4: Final image
+
+The image would be created under the folder below.
 
 ```
-**Deploying Image on sites**
+cd rpi-image-gen/work/image-perchpi
+ls perchpi.img
+```
 
-Make the custom image available in Raspberry Pi Imager list of the images to download directly
+Step5: Deploy the created image to Raspberry Pi device (RPi4)
 
