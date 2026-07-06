@@ -12,6 +12,20 @@ The overall process:
 
 **Build custom image:**
 
+Step 1: Git clone the RaspberryPi Custom image (rpi-image-gen)
+
+```
+git clone https://github.com/raspberrypi/rpi-image-gen.git
+cd rpi-image-gen
+sudo ./install_deps.sh
+```
+
+Step 2: Git clone the custom image for PerchPi
+```
+git clone https://github.com/raspberrypi/rpi-image-gen.git
+cd rpi-image-gen
+sudo ./install_deps.sh
+```
 Leverage rpi-image-gen to build a custom image
 Define the config & layer for customising the features relevant for the
 Config - Define the image name
